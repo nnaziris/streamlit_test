@@ -46,7 +46,7 @@ def main():
         """,
         unsafe_allow_html=True
     )
-    st.markdown('<div class="center-title">💊 Pharmacoinformatics Database  💊</div>', unsafe_allow_html=True)
+    st.markdown('<div class="center-title">💊 Global Health Products 💊</div>', unsafe_allow_html=True)
     st.markdown(introduction)
 
     def explore_database():
