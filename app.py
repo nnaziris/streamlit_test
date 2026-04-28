@@ -28,10 +28,9 @@ def main():
     introduction = """
         ### Introduction:
 
-        Data-driven decision-making is poised to drive the efficiency of the pharmaceutical industry. Existing sources of
-        data, however, do not adequately support drug product development. This page was built as part of a study (**currently under review in _Molecular Pharmaceutics_**) that
-        used web scraping to construct a highly linked drug product database.
-
+        This database provides information on drug molecules and products for low-income countries, aiming to assist third-world scientists and manufacturers to develop new products
+        and facilitate the employment of bio-enabling formaulations.
+    
         Use the buttons below to explore two applications built using this data:
     """
     st.markdown(
