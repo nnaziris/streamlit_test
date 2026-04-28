@@ -23,7 +23,7 @@ def main():
     if "active_tab" not in st.session_state:
         st.session_state.active_tab = None
 
-    st.set_page_config(page_title="Pharmacoinformatics Repository", layout="wide")
+    st.set_page_config(page_title="Global Health Products", layout="wide")
 
     introduction = """
         ### Introduction:
