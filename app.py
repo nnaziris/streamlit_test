@@ -342,7 +342,7 @@ def main():
     with col2:
         with st.container():
             st.write("")
-            if st.button("Explore Association Rules", use_container_width=True):
+            if st.button("Formulation Design", use_container_width=True):
                 st.session_state.active_tab = "association_rules"
 
     if st.session_state.get("active_tab") == "association_rules":
