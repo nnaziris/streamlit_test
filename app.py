@@ -295,7 +295,7 @@ def main():
                 row["antecedent"], row["consequent"],
                 **{attr: row[attr] for attr in ["lift", "coverage", "confidence", "support"]}
             )
-        net = Network(height="600px", width="800px", bgcolor="white", font_color="blue", directed=True)
+        net = Network(height="600px", width="800px", bgcolor="white", font_color="black", directed=True)
         net.from_nx(G)
         for edge in net.edges:
             edge["label"] = str(edge[attribute])
@@ -357,3 +357,14 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+st.markdown("""
+<style>
+body {
+    background-color: blue;
+}
+.stApp {
+    background-color: blue;
+}
+</style>
+""", unsafe_allow_html=True)
