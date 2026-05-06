@@ -358,6 +358,7 @@ def main():
 if __name__ == "__main__":
     main()
 
+    # Background color
 st.markdown("""
 <style>
 body {
