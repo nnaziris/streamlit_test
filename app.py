@@ -116,7 +116,7 @@ def main():
                 product_details = product_df[product_df["product_id"] == product_id].iloc[0]
                 product_info = {
                     "Product Name": product_details["product_name"],
-                    "EMA Number": product_details["ema_number"],
+                    "WHO Product ID": product_details["who_product_id"],
                     "Authorization Status": product_details["authorisation_status"],
                     "Therapeutic Group": product_details["therapeutic_group"],
                     "Dosage Form": product_details["dosage_form"],
