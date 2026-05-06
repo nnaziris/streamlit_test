@@ -337,7 +337,7 @@ def main():
     with col1:
         with st.container():
             st.write("")
-            if st.button("Explore the Database", use_container_width=True):
+            if st.button("Approved Product Database", use_container_width=True):
                 st.session_state.active_tab = "drug_products"
     with col2:
         with st.container():
