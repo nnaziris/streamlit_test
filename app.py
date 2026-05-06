@@ -361,10 +361,10 @@ if __name__ == "__main__":
 st.markdown("""
 <style>
 body {
-    background-color: blue;
+    background-color: darkblue;
 }
 .stApp {
-    background-color: blue;
+    background-color: darkblue;
 }
 </style>
 """, unsafe_allow_html=True)
