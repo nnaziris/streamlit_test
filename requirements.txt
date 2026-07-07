@@ -1,6 +1,6 @@
 streamlit
 pyvis
 networkx
-rdkit==2023.09.1
+rdkit
 requests
 Pillow
