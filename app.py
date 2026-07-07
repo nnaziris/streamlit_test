@@ -31,7 +31,7 @@ def main():
         This database provides information on drug molecules and products for low-income countries, aiming to assist third-world scientists and manufacturers to develop new products
         and facilitate the employment of bio-enabling formaulations.
     
-        Use the buttons below to explore two applications built using this data:
+        Use the buttons below to explore three applications built using this data:
     """
     st.markdown(
         """
@@ -229,6 +229,15 @@ def main():
                             if pd.notna(value): 
                                 st.write(f"**{display_name}:** {value}", unsafe_allow_html=True)
 
+    # Formulation Recommendation
+    def formulation_recommendation():
+        st.markdown("""
+            This tool helps you find recommended formulations based on your drug selection. 
+            Use the interface below to search for a drug and get recommendations for suitable excipients and formulation strategies.
+            """)
+        
+        st.info("💡 Feature coming soon: Intelligent formulation recommendation engine")
+
     # Association rules
     def explore_rules():
         st.markdown("""
@@ -332,8 +341,8 @@ def main():
         network_html = net.generate_html()
         st.components.v1.html(network_html, height=600)
 
-    # Two buttons to switch between both functionalities
-    col1, col2 = st.columns(2)
+    # Three buttons to switch between functionalities
+    col1, col2, col3 = st.columns(3)
     with col1:
         with st.container():
             st.write("")
@@ -342,13 +351,20 @@ def main():
     with col2:
         with st.container():
             st.write("")
+            if st.button("Formulation Recommendation", use_container_width=True):
+                st.session_state.active_tab = "formulation_recommendation"
+    with col3:
+        with st.container():
+            st.write("")
             if st.button("Formulation Design", use_container_width=True):
                 st.session_state.active_tab = "association_rules"
 
-    if st.session_state.get("active_tab") == "association_rules":
-        explore_rules()
-    elif st.session_state.get("active_tab") == "drug_products":
+    if st.session_state.get("active_tab") == "drug_products":
         explore_database()
+    elif st.session_state.get("active_tab") == "formulation_recommendation":
+        formulation_recommendation()
+    elif st.session_state.get("active_tab") == "association_rules":
+        explore_rules()
 
     st.markdown("""
         Please note that the data shown in on this page may not be up to date, and should therefore not
