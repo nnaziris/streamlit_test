@@ -233,7 +233,7 @@ def main():
     def formulation_recommendation():
         st.markdown("""
             This tool helps you find recommended formulations based on your drug selection. 
-            Use the interface below to search for a drug and get recommendations for suitable excipients and formulation strategies.
+            Use the interface below to search for a drug, based on the SMILES, and get recommendations for suitable excipients and formulation strategies.
             """)
         
         st.info("💡 Feature coming soon: Intelligent formulation recommendation engine")
