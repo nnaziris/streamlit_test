@@ -1,7 +1,6 @@
 streamlit
 pyvis
 networkx
-rdkit
-pyvis
+rdkit-pypi
 requests
 Pillow
