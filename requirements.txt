@@ -1,2 +1,5 @@
 pyvis
 networkx
+rdkit
+requests
+Pillow
