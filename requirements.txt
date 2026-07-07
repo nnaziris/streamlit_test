@@ -1,5 +1,5 @@
 pyvis
 networkx
-rdkit
+rdkit==2023.09.1
 requests
 Pillow
