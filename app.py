@@ -204,7 +204,7 @@ def main():
                     "notes": "Curation nodes"
                 }
                 for i, row in drug_entries.iterrows():
-                    with st.expander(f"{row["drug_substance"]}"):
+                    with st.expander(f"{row['drug_substance']}"):
                         for column, display_name in column_names.items():
                             value = row.get(column, None)
                             if pd.notna(value): 
@@ -223,7 +223,7 @@ def main():
                 }
 
                 for i, row in excipient_entries.iterrows():
-                    with st.expander(f"{row["excipient_name"]}"):
+                    with st.expander(f"{row['excipient_name']}"):
                         for column, display_name in column_names_excipient.items():
                             value = row.get(column, None)
                             if pd.notna(value): 
@@ -233,21 +233,22 @@ def main():
         """Fetch drug data from ChEMBL API"""
         try:
             if drug_name:
-                # Search by drug name
-                url = "https://www.ebi.ac.uk/chembl/api/data/compounds"
+                # Use the current molecule search endpoint
+                url = "https://www.ebi.ac.uk/chembl/api/data/molecule/search"
                 params = {
-                    "search": drug_name,
+                    "q": drug_name,
                     "limit": 10,
                     "format": "json"
                 }
                 response = requests.get(url, params=params, timeout=10)
                 response.raise_for_status()
                 data = response.json()
-                return data.get("compounds", [])
+                # search endpoint returns results under 'molecules'
+                return data.get("molecules", []) or data.get("molecule", []) or []
             
             elif smiles:
-                # Search by SMILES - get structure data
-                url = "https://www.ebi.ac.uk/chembl/api/data/compounds"
+                # Search by SMILES using the molecule endpoint
+                url = "https://www.ebi.ac.uk/chembl/api/data/molecule"
                 params = {
                     "smiles": smiles,
                     "limit": 10,
@@ -256,16 +257,22 @@ def main():
                 response = requests.get(url, params=params, timeout=10)
                 response.raise_for_status()
                 data = response.json()
-                return data.get("compounds", [])
-        
+                # Try to handle paged/different response shapes
+                if isinstance(data, dict):
+                    return data.get("molecules", []) or data.get("molecule", []) or data.get("results", []) or []
+                if isinstance(data, list):
+                    return data
+                return []
         except requests.exceptions.RequestException as e:
             st.error(f"Error fetching data from ChEMBL: {str(e)}")
             return []
 
     def fetch_chembl_compound_details(chembl_id):
-        """Fetch detailed compound information from ChEMBL"""
+        """Fetch detailed compound information from ChEMBL (molecule resource)"""
         try:
-            url = f"https://www.ebi.ac.uk/chembl/api/data/compounds/{chembl_id}.json"
+            if not chembl_id:
+                return None
+            url = f"https://www.ebi.ac.uk/chembl/api/data/molecule/{chembl_id}.json"
             response = requests.get(url, timeout=10)
             response.raise_for_status()
             return response.json()
@@ -321,7 +328,10 @@ def main():
     def get_chembl_image(chembl_id):
         """Fetch molecule image from ChEMBL"""
         try:
-            url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg?format=json"
+            if not chembl_id:
+                return None
+            # The image SVG endpoint usually exists for molecule IDs
+            url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg"
             response = requests.get(url, timeout=10)
             if response.status_code == 200:
                 return response.content
