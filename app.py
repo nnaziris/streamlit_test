@@ -1,14 +1,9 @@
 import streamlit as st
 import pandas as pd
-import streamlit as st
 import networkx as nx
 from pyvis.network import Network
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype
 import requests
-from rdkit import Chem
-from rdkit.Chem import Draw, Crippen, Descriptors
-from PIL import Image
-from io import BytesIO
 
 def main():
     if "dataframes" not in st.session_state:
@@ -267,26 +262,72 @@ def main():
             st.error(f"Error fetching data from ChEMBL: {str(e)}")
             return []
 
-    def calculate_lipinski_descriptors(smiles):
-        """Calculate Lipinski's Rule of 5 descriptors"""
+    def fetch_chembl_compound_details(chembl_id):
+        """Fetch detailed compound information from ChEMBL"""
         try:
-            mol = Chem.MolFromSmiles(smiles)
-            if mol is None:
-                return None
-            
-            descriptors = {
-                "Molecular Weight": round(Descriptors.MolWt(mol), 2),
-                "LogP": round(Crippen.MolLogP(mol), 2),
-                "H-Bond Donors": Crippen.NumHDonors(mol),
-                "H-Bond Acceptors": Crippen.NumHAcceptors(mol),
-                "Rotatable Bonds": Descriptors.NumRotatableBonds(mol),
-                "TPSA": round(Descriptors.TPSA(mol), 2),
-                "Aromatic Rings": Descriptors.NumAromaticRings(mol)
-            }
-            return descriptors
-        except Exception as e:
-            st.error(f"Error calculating descriptors: {str(e)}")
+            url = f"https://www.ebi.ac.uk/chembl/api/data/compounds/{chembl_id}.json"
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            st.error(f"Error fetching compound details from ChEMBL: {str(e)}")
             return None
+
+    def extract_chembl_properties(compound_data):
+        """Extract molecular properties from ChEMBL compound data"""
+        if not compound_data:
+            return None
+        
+        properties = {}
+        
+        # Extract available properties from ChEMBL data
+        if "molecule_properties" in compound_data:
+            props = compound_data["molecule_properties"]
+            
+            # Molecular Weight
+            if "mw_freebase" in props:
+                properties["Molecular Weight"] = round(props["mw_freebase"], 2)
+            
+            # LogP (Crippen) - stored as alogps
+            if "alogps" in props:
+                properties["LogP (Crippen)"] = round(float(props["alogps"]), 2) if props["alogps"] is not None else "N/A"
+            
+            # CX LogP
+            if "cx_logp" in props:
+                properties["CX LogP"] = round(float(props["cx_logp"]), 2) if props["cx_logp"] is not None else "N/A"
+            
+            # CX LogD7.4
+            if "cx_logd" in props:
+                properties["CX LogD7.4"] = round(float(props["cx_logd"]), 2) if props["cx_logd"] is not None else "N/A"
+            
+            # H-Bond Donors
+            if "num_h_donors" in props:
+                properties["HB Donors"] = props["num_h_donors"]
+            
+            # H-Bond Acceptors
+            if "num_h_acceptors" in props:
+                properties["HB Acceptors"] = props["num_h_acceptors"]
+            
+            # TPSA (Topological Polar Surface Area)
+            if "tpsa" in props:
+                properties["TPSA"] = round(props["tpsa"], 2) if props["tpsa"] is not None else "N/A"
+        
+        # Add image URL if available
+        if "image_file" in compound_data:
+            properties["image_url"] = f"https://www.ebi.ac.uk/chembl/api/data/image/{compound_data['molecule_chembl_id']}.svg"
+        
+        return properties if properties else None
+
+    def get_chembl_image(chembl_id):
+        """Fetch molecule image from ChEMBL"""
+        try:
+            url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg?format=json"
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                return response.content
+        except requests.exceptions.RequestException:
+            pass
+        return None
 
     def get_lipinski_compliance(descriptors):
         """Check Lipinski's Rule of 5 compliance"""
@@ -296,18 +337,39 @@ def main():
         violations = 0
         issues = []
         
-        if descriptors["Molecular Weight"] > 500:
-            violations += 1
-            issues.append("MW > 500")
-        if descriptors["LogP"] > 5:
-            violations += 1
-            issues.append("LogP > 5")
-        if descriptors["H-Bond Donors"] > 5:
-            violations += 1
-            issues.append("HBD > 5")
-        if descriptors["H-Bond Acceptors"] > 10:
-            violations += 1
-            issues.append("HBA > 10")
+        # Extract numeric values for comparison
+        mw = descriptors.get("Molecular Weight")
+        logp = descriptors.get("LogP (Crippen)")
+        hbd = descriptors.get("HB Donors")
+        hba = descriptors.get("HB Acceptors")
+        
+        try:
+            if mw and float(mw) > 500:
+                violations += 1
+                issues.append("MW > 500")
+        except (ValueError, TypeError):
+            pass
+        
+        try:
+            if logp and logp != "N/A" and float(logp) > 5:
+                violations += 1
+                issues.append("LogP > 5")
+        except (ValueError, TypeError):
+            pass
+        
+        try:
+            if hbd and int(hbd) > 5:
+                violations += 1
+                issues.append("HBD > 5")
+        except (ValueError, TypeError):
+            pass
+        
+        try:
+            if hba and int(hba) > 10:
+                violations += 1
+                issues.append("HBA > 10")
+        except (ValueError, TypeError):
+            pass
         
         return {
             "violations": violations,
@@ -315,25 +377,11 @@ def main():
             "issues": issues if issues else ["Passes all rules"]
         }
 
-    def draw_molecule(smiles):
-        """Draw molecule structure from SMILES"""
-        try:
-            mol = Chem.MolFromSmiles(smiles)
-            if mol is None:
-                st.error("Invalid SMILES string")
-                return None
-            
-            img = Draw.MolToImage(mol, size=(400, 400))
-            return img
-        except Exception as e:
-            st.error(f"Error drawing molecule: {str(e)}")
-            return None
-
     # Formulation Recommendation
     def formulation_recommendation():
         st.markdown("""
             This tool helps you find recommended formulations based on your drug selection. 
-            Input a drug name or SMILES to retrieve the drug structure and Lipinski descriptors.
+            Input a drug name or SMILES to retrieve the drug structure and properties from ChEMBL.
             """)
         
         st.subheader("🔬 Drug Structure & Properties Analyzer")
@@ -360,31 +408,40 @@ def main():
                     )
                     
                     selected_compound = compounds[selected_idx]
-                    smiles = selected_compound.get('canonical_smiles')
-                    pref_name = selected_compound.get('pref_name', 'Unknown')
                     chembl_id = selected_compound.get('molecule_chembl_id', 'N/A')
+                    pref_name = selected_compound.get('pref_name', 'Unknown')
                     
-                    if smiles:
+                    with st.spinner("Fetching compound details..."):
+                        compound_details = fetch_chembl_compound_details(chembl_id)
+                    
+                    if compound_details:
                         st.markdown("---")
                         col1, col2 = st.columns([1, 1])
                         
                         with col1:
                             st.subheader("🧬 Molecular Structure")
-                            img = draw_molecule(smiles)
-                            if img:
-                                st.image(img, use_column_width=True)
+                            # Try to display molecule image
+                            try:
+                                img_data = get_chembl_image(chembl_id)
+                                if img_data:
+                                    st.image(img_data, use_column_width=True)
+                                else:
+                                    st.info("Molecule image not available")
+                            except Exception as e:
+                                st.info(f"Could not load molecule image: {str(e)}")
                         
                         with col2:
-                            st.subheader("📊 Lipinski Descriptors")
-                            descriptors = calculate_lipinski_descriptors(smiles)
+                            st.subheader("📊 Molecular Properties")
+                            properties = extract_chembl_properties(compound_details)
                             
-                            if descriptors:
-                                # Display descriptors in a table
-                                desc_df = pd.DataFrame(list(descriptors.items()), columns=["Descriptor", "Value"])
-                                st.table(desc_df)
+                            if properties:
+                                # Remove image_url from display
+                                display_props = {k: v for k, v in properties.items() if k != "image_url"}
+                                prop_df = pd.DataFrame(list(display_props.items()), columns=["Property", "Value"])
+                                st.table(prop_df)
                                 
                                 # Check Lipinski compliance
-                                lipinski_check = get_lipinski_compliance(descriptors)
+                                lipinski_check = get_lipinski_compliance(properties)
                                 if lipinski_check:
                                     st.markdown("---")
                                     if lipinski_check["passes"]:
@@ -393,49 +450,84 @@ def main():
                                         st.warning(f"⚠️ Violates Lipinski's Rule of 5 ({lipinski_check['violations']} violation(s))")
                                     
                                     st.write(f"**Issues:** {', '.join(lipinski_check['issues'])}")
+                            else:
+                                st.warning("No properties available for this compound")
                         
                         st.markdown("---")
                         st.write(f"**Drug Name:** {pref_name}")
                         st.write(f"**ChEMBL ID:** {chembl_id}")
-                        st.write(f"**SMILES:** `{smiles}`")
                 else:
                     st.warning("No compounds found. Try a different search term.")
         
         with tab2:
-            st.write("**Enter a SMILES string directly**")
+            st.write("**Enter a SMILES string directly to search ChEMBL**")
             smiles_input = st.text_area("Enter SMILES:", key="smiles_input", placeholder="e.g., CC(=O)Oc1ccccc1C(=O)O", height=80)
             
             if smiles_input:
                 smiles_input = smiles_input.strip()
                 
-                st.markdown("---")
-                col1, col2 = st.columns([1, 1])
+                with st.spinner("Searching ChEMBL for SMILES..."):
+                    compounds = fetch_chembl_data(smiles=smiles_input)
                 
-                with col1:
-                    st.subheader("🧬 Molecular Structure")
-                    img = draw_molecule(smiles_input)
-                    if img:
-                        st.image(img, use_column_width=True)
-                
-                with col2:
-                    st.subheader("📊 Lipinski Descriptors")
-                    descriptors = calculate_lipinski_descriptors(smiles_input)
+                if compounds:
+                    st.success(f"Found {len(compounds)} compound(s)")
                     
-                    if descriptors:
-                        # Display descriptors in a table
-                        desc_df = pd.DataFrame(list(descriptors.items()), columns=["Descriptor", "Value"])
-                        st.table(desc_df)
+                    # Create a selectbox for multiple results
+                    selected_idx = st.selectbox(
+                        "Select a compound:",
+                        range(len(compounds)),
+                        format_func=lambda i: f"{compounds[i].get('pref_name', 'Unknown')} (ChEMBL ID: {compounds[i].get('molecule_chembl_id', 'N/A')})",
+                        key="smiles_selectbox"
+                    )
+                    
+                    selected_compound = compounds[selected_idx]
+                    chembl_id = selected_compound.get('molecule_chembl_id', 'N/A')
+                    pref_name = selected_compound.get('pref_name', 'Unknown')
+                    
+                    with st.spinner("Fetching compound details..."):
+                        compound_details = fetch_chembl_compound_details(chembl_id)
+                    
+                    if compound_details:
+                        st.markdown("---")
+                        col1, col2 = st.columns([1, 1])
                         
-                        # Check Lipinski compliance
-                        lipinski_check = get_lipinski_compliance(descriptors)
-                        if lipinski_check:
-                            st.markdown("---")
-                            if lipinski_check["passes"]:
-                                st.success(f"✅ Passes Lipinski's Rule of 5 ({lipinski_check['violations']} violation(s))")
-                            else:
-                                st.warning(f"⚠️ Violates Lipinski's Rule of 5 ({lipinski_check['violations']} violation(s))")
+                        with col1:
+                            st.subheader("🧬 Molecular Structure")
+                            try:
+                                img_data = get_chembl_image(chembl_id)
+                                if img_data:
+                                    st.image(img_data, use_column_width=True)
+                                else:
+                                    st.info("Molecule image not available")
+                            except Exception as e:
+                                st.info(f"Could not load molecule image: {str(e)}")
+                        
+                        with col2:
+                            st.subheader("📊 Molecular Properties")
+                            properties = extract_chembl_properties(compound_details)
                             
-                            st.write(f"**Issues:** {', '.join(lipinski_check['issues'])}")
+                            if properties:
+                                display_props = {k: v for k, v in properties.items() if k != "image_url"}
+                                prop_df = pd.DataFrame(list(display_props.items()), columns=["Property", "Value"])
+                                st.table(prop_df)
+                                
+                                lipinski_check = get_lipinski_compliance(properties)
+                                if lipinski_check:
+                                    st.markdown("---")
+                                    if lipinski_check["passes"]:
+                                        st.success(f"✅ Passes Lipinski's Rule of 5 ({lipinski_check['violations']} violation(s))")
+                                    else:
+                                        st.warning(f"⚠️ Violates Lipinski's Rule of 5 ({lipinski_check['violations']} violation(s))")
+                                    
+                                    st.write(f"**Issues:** {', '.join(lipinski_check['issues'])}")
+                            else:
+                                st.warning("No properties available for this compound")
+                        
+                        st.markdown("---")
+                        st.write(f"**Drug Name:** {pref_name}")
+                        st.write(f"**ChEMBL ID:** {chembl_id}")
+                else:
+                    st.warning("No compounds found for this SMILES string. Try a different structure.")
 
     # Association rules
     def explore_rules():
