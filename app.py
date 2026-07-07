@@ -8,8 +8,8 @@ from pandas.api.types import is_categorical_dtype, is_numeric_dtype
 def main():
     if "dataframes" not in st.session_state:
         st.session_state.dataframes = {
-            "formulated_drugs": pd.read_csv("files/formulated_drugs_1.csv"),
-            "drug_products": pd.read_csv("files/drug_products_1.csv"),
+            "formulated_drugs": pd.read_csv("files/formulated_drugs.csv"),
+            "drug_products": pd.read_csv("files/drug_products.csv"),
             "excipients": pd.read_csv("files/excipients.csv"),
             "formulations": pd.read_csv("files/formulations.csv"),
             "parent_drugs": pd.read_csv("files/parent_drugs.csv"),
