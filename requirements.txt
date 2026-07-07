@@ -3,3 +3,4 @@ pyvis
 networkx
 requests
 Pillow
+rdkit
