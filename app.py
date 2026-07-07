@@ -150,7 +150,7 @@ def main():
         def display_boolean_box(value, label):
             color = "#28a745" if value else "#dc3545"  
             text = "<b>True</b>" if value else "<b>False</b>" 
-            box_style = "display: inline-block; padding: 8px 16px; background-color: {}; color: white; border-radius: 5px; font-size: 14px; text-align: center; width: 120px; margin: 4px;".format(color)
+            box_style = "display: inline-block; padding: 8px 16px; background-color: {}; color: white; border-radius: 5px; font-size: 14px; text-align: center; width: 120px; margin: 4px;".format([...]
             st.markdown(f"<div style='{box_style}'>{label}: <br>{text}</div>", unsafe_allow_html=True)
 
         if st.session_state.active_tab in st.session_state.dataframes:
@@ -292,7 +292,7 @@ def main():
             props = compound_data["molecule_properties"]
             
             # Molecular Weight
-            if "mw_freebase" in props:
+            if "mw_freebase" in props and props["mw_freebase"] is not None:
                 properties["Molecular Weight"] = round(props["mw_freebase"], 2)
             
             # LogP (Crippen) - stored as alogps
@@ -308,11 +308,11 @@ def main():
                 properties["CX LogD7.4"] = round(float(props["cx_logd"]), 2) if props["cx_logd"] is not None else "N/A"
             
             # H-Bond Donors
-            if "num_h_donors" in props:
+            if "num_h_donors" in props and props["num_h_donors"] is not None:
                 properties["HB Donors"] = props["num_h_donors"]
             
             # H-Bond Acceptors
-            if "num_h_acceptors" in props:
+            if "num_h_acceptors" in props and props["num_h_acceptors"] is not None:
                 properties["HB Acceptors"] = props["num_h_acceptors"]
             
             # TPSA (Topological Polar Surface Area)
