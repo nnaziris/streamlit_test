@@ -150,7 +150,7 @@ def main():
         def display_boolean_box(value, label):
             color = "#28a745" if value else "#dc3545"  
             text = "<b>True</b>" if value else "<b>False</b>" 
-            box_style = "display: inline-block; padding: 8px 16px; background-color: {}; color: white; border-radius: 5px; font-size: 14px; text-align: center; width: 120px; margin: 4px;".format([...]
+            box_style = "display: inline-block; padding: 8px 16px; background-color: {}; color: white; border-radius: 5px; font-size: 14px; text-align: center; width: 120px; margin: 4px;".format(color)
             st.markdown(f"<div style='{box_style}'>{label}: <br>{text}</div>", unsafe_allow_html=True)
 
         if st.session_state.active_tab in st.session_state.dataframes:
