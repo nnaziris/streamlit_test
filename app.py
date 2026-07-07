@@ -4,6 +4,11 @@ import streamlit as st
 import networkx as nx
 from pyvis.network import Network
 from pandas.api.types import is_categorical_dtype, is_numeric_dtype
+import requests
+from rdkit import Chem
+from rdkit.Chem import Draw, Crippen, Descriptors
+from PIL import Image
+from io import BytesIO
 
 def main():
     if "dataframes" not in st.session_state:
@@ -229,14 +234,208 @@ def main():
                             if pd.notna(value): 
                                 st.write(f"**{display_name}:** {value}", unsafe_allow_html=True)
 
+    def fetch_chembl_data(drug_name=None, smiles=None):
+        """Fetch drug data from ChEMBL API"""
+        try:
+            if drug_name:
+                # Search by drug name
+                url = "https://www.ebi.ac.uk/chembl/api/data/compounds"
+                params = {
+                    "search": drug_name,
+                    "limit": 10,
+                    "format": "json"
+                }
+                response = requests.get(url, params=params, timeout=10)
+                response.raise_for_status()
+                data = response.json()
+                return data.get("compounds", [])
+            
+            elif smiles:
+                # Search by SMILES - get structure data
+                url = "https://www.ebi.ac.uk/chembl/api/data/compounds"
+                params = {
+                    "smiles": smiles,
+                    "limit": 10,
+                    "format": "json"
+                }
+                response = requests.get(url, params=params, timeout=10)
+                response.raise_for_status()
+                data = response.json()
+                return data.get("compounds", [])
+        
+        except requests.exceptions.RequestException as e:
+            st.error(f"Error fetching data from ChEMBL: {str(e)}")
+            return []
+
+    def calculate_lipinski_descriptors(smiles):
+        """Calculate Lipinski's Rule of 5 descriptors"""
+        try:
+            mol = Chem.MolFromSmiles(smiles)
+            if mol is None:
+                return None
+            
+            descriptors = {
+                "Molecular Weight": round(Descriptors.MolWt(mol), 2),
+                "LogP": round(Crippen.MolLogP(mol), 2),
+                "H-Bond Donors": Crippen.NumHDonors(mol),
+                "H-Bond Acceptors": Crippen.NumHAcceptors(mol),
+                "Rotatable Bonds": Descriptors.NumRotatableBonds(mol),
+                "TPSA": round(Descriptors.TPSA(mol), 2),
+                "Aromatic Rings": Descriptors.NumAromaticRings(mol)
+            }
+            return descriptors
+        except Exception as e:
+            st.error(f"Error calculating descriptors: {str(e)}")
+            return None
+
+    def get_lipinski_compliance(descriptors):
+        """Check Lipinski's Rule of 5 compliance"""
+        if not descriptors:
+            return None
+        
+        violations = 0
+        issues = []
+        
+        if descriptors["Molecular Weight"] > 500:
+            violations += 1
+            issues.append("MW > 500")
+        if descriptors["LogP"] > 5:
+            violations += 1
+            issues.append("LogP > 5")
+        if descriptors["H-Bond Donors"] > 5:
+            violations += 1
+            issues.append("HBD > 5")
+        if descriptors["H-Bond Acceptors"] > 10:
+            violations += 1
+            issues.append("HBA > 10")
+        
+        return {
+            "violations": violations,
+            "passes": violations <= 1,
+            "issues": issues if issues else ["Passes all rules"]
+        }
+
+    def draw_molecule(smiles):
+        """Draw molecule structure from SMILES"""
+        try:
+            mol = Chem.MolFromSmiles(smiles)
+            if mol is None:
+                st.error("Invalid SMILES string")
+                return None
+            
+            img = Draw.MolToImage(mol, size=(400, 400))
+            return img
+        except Exception as e:
+            st.error(f"Error drawing molecule: {str(e)}")
+            return None
+
     # Formulation Recommendation
     def formulation_recommendation():
         st.markdown("""
             This tool helps you find recommended formulations based on your drug selection. 
-            Use the interface below to search for a drug, based on the SMILES, and get recommendations for suitable excipients and formulation strategies.
+            Input a drug name or SMILES to retrieve the drug structure and Lipinski descriptors.
             """)
         
-        st.info("💡 Feature coming soon: Intelligent formulation recommendation engine")
+        st.subheader("🔬 Drug Structure & Properties Analyzer")
+        
+        # Create tabs for input method
+        tab1, tab2 = st.tabs(["Search by Drug Name", "Search by SMILES"])
+        
+        with tab1:
+            st.write("**Search for a drug by name in ChEMBL database**")
+            drug_name = st.text_input("Enter drug name:", key="drug_name_input", placeholder="e.g., Aspirin, Ibuprofen")
+            
+            if drug_name:
+                with st.spinner("Searching ChEMBL database..."):
+                    compounds = fetch_chembl_data(drug_name=drug_name)
+                
+                if compounds:
+                    st.success(f"Found {len(compounds)} compound(s)")
+                    
+                    # Create a selectbox for multiple results
+                    selected_idx = st.selectbox(
+                        "Select a compound:",
+                        range(len(compounds)),
+                        format_func=lambda i: f"{compounds[i].get('pref_name', 'Unknown')} (ChEMBL ID: {compounds[i].get('molecule_chembl_id', 'N/A')})"
+                    )
+                    
+                    selected_compound = compounds[selected_idx]
+                    smiles = selected_compound.get('canonical_smiles')
+                    pref_name = selected_compound.get('pref_name', 'Unknown')
+                    chembl_id = selected_compound.get('molecule_chembl_id', 'N/A')
+                    
+                    if smiles:
+                        st.markdown("---")
+                        col1, col2 = st.columns([1, 1])
+                        
+                        with col1:
+                            st.subheader("🧬 Molecular Structure")
+                            img = draw_molecule(smiles)
+                            if img:
+                                st.image(img, use_column_width=True)
+                        
+                        with col2:
+                            st.subheader("📊 Lipinski Descriptors")
+                            descriptors = calculate_lipinski_descriptors(smiles)
+                            
+                            if descriptors:
+                                # Display descriptors in a table
+                                desc_df = pd.DataFrame(list(descriptors.items()), columns=["Descriptor", "Value"])
+                                st.table(desc_df)
+                                
+                                # Check Lipinski compliance
+                                lipinski_check = get_lipinski_compliance(descriptors)
+                                if lipinski_check:
+                                    st.markdown("---")
+                                    if lipinski_check["passes"]:
+                                        st.success(f"✅ Passes Lipinski's Rule of 5 ({lipinski_check['violations']} violation(s))")
+                                    else:
+                                        st.warning(f"⚠️ Violates Lipinski's Rule of 5 ({lipinski_check['violations']} violation(s))")
+                                    
+                                    st.write(f"**Issues:** {', '.join(lipinski_check['issues'])}")
+                        
+                        st.markdown("---")
+                        st.write(f"**Drug Name:** {pref_name}")
+                        st.write(f"**ChEMBL ID:** {chembl_id}")
+                        st.write(f"**SMILES:** `{smiles}`")
+                else:
+                    st.warning("No compounds found. Try a different search term.")
+        
+        with tab2:
+            st.write("**Enter a SMILES string directly**")
+            smiles_input = st.text_area("Enter SMILES:", key="smiles_input", placeholder="e.g., CC(=O)Oc1ccccc1C(=O)O", height=80)
+            
+            if smiles_input:
+                smiles_input = smiles_input.strip()
+                
+                st.markdown("---")
+                col1, col2 = st.columns([1, 1])
+                
+                with col1:
+                    st.subheader("🧬 Molecular Structure")
+                    img = draw_molecule(smiles_input)
+                    if img:
+                        st.image(img, use_column_width=True)
+                
+                with col2:
+                    st.subheader("📊 Lipinski Descriptors")
+                    descriptors = calculate_lipinski_descriptors(smiles_input)
+                    
+                    if descriptors:
+                        # Display descriptors in a table
+                        desc_df = pd.DataFrame(list(descriptors.items()), columns=["Descriptor", "Value"])
+                        st.table(desc_df)
+                        
+                        # Check Lipinski compliance
+                        lipinski_check = get_lipinski_compliance(descriptors)
+                        if lipinski_check:
+                            st.markdown("---")
+                            if lipinski_check["passes"]:
+                                st.success(f"✅ Passes Lipinski's Rule of 5 ({lipinski_check['violations']} violation(s))")
+                            else:
+                                st.warning(f"⚠️ Violates Lipinski's Rule of 5 ({lipinski_check['violations']} violation(s))")
+                            
+                            st.write(f"**Issues:** {', '.join(lipinski_check['issues'])}")
 
     # Association rules
     def explore_rules():
