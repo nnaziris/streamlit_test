@@ -427,19 +427,23 @@ def main():
                         
                         with col1:
                             st.subheader("🧬 Molecular Structure")
-                            image_url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg"
+                        
                             st.markdown(
-                                f"""
-                                <div style="
+                                """
+                                <style>
+                                img {
                                     background-color: white;
-                                    padding: 20px;
+                                    padding: 15px;
                                     border-radius: 10px;
-                                    display: inline-block;
-                                ">
-                                    {image_url}
-                                </div>
+                                }
+                                </style>
                                 """,
-                                unsafe_allow_html=True
+                                unsafe_allow_html=True,
+                            )
+                        
+                            st.image(
+                                f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg",
+                                use_container_width=True
                             )
                        
                         with col2:
@@ -505,19 +509,23 @@ def main():
                         
                         with col1:
                             st.subheader("🧬 Molecular Structure")
-                            image_url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg"
+                        
                             st.markdown(
-                                f"""
-                                <div style="
+                                """
+                                <style>
+                                img {
                                     background-color: white;
-                                    padding: 20px;
+                                    padding: 15px;
                                     border-radius: 10px;
-                                    display: inline-block;
-                                ">
-                                    {image_url}
-                                </div>
+                                }
+                                </style>
                                 """,
-                                unsafe_allow_html=True
+                                unsafe_allow_html=True,
+                            )
+                        
+                            st.image(
+                                f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg",
+                                use_container_width=True
                             )
                         
                         with col2:
