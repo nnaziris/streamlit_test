@@ -428,7 +428,19 @@ def main():
                         with col1:
                             st.subheader("🧬 Molecular Structure")
                             image_url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg"
-                            st.image(image_url)
+                            st.markdown(
+                                f"""
+                                <div style="
+                                    background-color: white;
+                                    padding: 20px;
+                                    border-radius: 10px;
+                                    display: inline-block;
+                                ">
+                                    {image_url}
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
                        
                         with col2:
                             st.subheader("📊 Molecular Properties")
@@ -494,7 +506,19 @@ def main():
                         with col1:
                             st.subheader("🧬 Molecular Structure")
                             image_url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg"
-                            st.image(image_url)
+                            st.markdown(
+                                f"""
+                                <div style="
+                                    background-color: white;
+                                    padding: 20px;
+                                    border-radius: 10px;
+                                    display: inline-block;
+                                ">
+                                    {image_url}
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
                         
                         with col2:
                             st.subheader("📊 Molecular Properties")
