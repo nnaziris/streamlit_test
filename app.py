@@ -288,39 +288,50 @@ def main():
         properties = {}
         
         # Extract available properties from ChEMBL data
+        
+        def safe_float(value):
+                try:
+                    return round(float(value), 2)
+                except (TypeError, ValueError):
+                    return "N/A"
+
         if "molecule_properties" in compound_data:
             props = compound_data["molecule_properties"]
             
-            # Molecular Weight
-            if "mw_freebase" in props and props["mw_freebase"] is not None:
-                try:
-                    properties["Molecular Weight"] = round(float(props["mw_freebase"]), 2)
-                except (ValueError, TypeError):
-                    properties["Molecular Weight"] = "N/A"
-            
-            # LogP (Crippen) - stored as alogps
-            if "alogps" in props:
-                properties["LogP (Crippen)"] = round(float(props["alogps"]), 2) if props["alogps"] is not None else "N/A"
-            
-            # CX LogP
-            if "cx_logp" in props:
-                properties["CX LogP"] = round(float(props["cx_logp"]), 2) if props["cx_logp"] is not None else "N/A"
-            
-            # CX LogD7.4
-            if "cx_logd" in props:
-                properties["CX LogD7.4"] = round(float(props["cx_logd"]), 2) if props["cx_logd"] is not None else "N/A"
-            
-            # H-Bond Donors
-            if "num_h_donors" in props and props["num_h_donors"] is not None:
-                properties["HB Donors"] = props["num_h_donors"]
-            
-            # H-Bond Acceptors
-            if "num_h_acceptors" in props and props["num_h_acceptors"] is not None:
-                properties["HB Acceptors"] = props["num_h_acceptors"]
-            
-            # TPSA (Topological Polar Surface Area)
-            if "tpsa" in props:
-                properties["TPSA"] = round(props["tpsa"], 2) if props["tpsa"] is not None else "N/A"
+
+        properties["Molecular Weight"] = safe_float(
+            props.get("mw_freebase")
+        )
+
+        properties["LogP (Crippen)"] = safe_float(
+            props.get("alogps")
+        )
+
+        properties["CX LogP"] = safe_float(
+            props.get("cx_logp")
+        )
+
+        properties["CX LogD7.4"] = safe_float(
+            props.get("cx_logd")
+        )
+
+        if props.get("num_h_donors") is not None:
+            properties["HB Donors"] = props.get("num_h_donors")
+
+        if props.get("num_h_acceptors") is not None:
+            properties["HB Acceptors"] = props.get("num_h_acceptors")
+
+        properties["TPSA"] = safe_float(
+            props.get("tpsa")
+        )
+
+    if "molecule_chembl_id" in compound_data:
+        properties["image_url"] = (
+            f"https://www.ebi.ac.uk/chembl/api/data/image/"
+            f"{compound_data['molecule_chembl_id']}.svg"
+        )
+
+    return properties if properties else None
         
         # Add image URL if available
         if "image_file" in compound_data:
