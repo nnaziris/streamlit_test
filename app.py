@@ -417,10 +417,7 @@ def main():
                     selected_compound = compounds[selected_idx]
                     chembl_id = selected_compound.get('molecule_chembl_id', 'N/A')
                     pref_name = selected_compound.get('pref_name', 'Unknown')
-
-                    st.write("ChEMBL ID:", chembl_id)
-                    st.json(selected_compound)
-                    
+                  
                     with st.spinner("Fetching compound details..."):
                         compound_details = fetch_chembl_compound_details(chembl_id)
                     
@@ -431,10 +428,8 @@ def main():
                         with col1:
                             st.subheader("🧬 Molecular Structure")
                             image_url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg"
-
-                            st.write("Image URL:")
-                            st.write(image_url)
-                        
+                            st.image(image_url)
+                       
                         with col2:
                             st.subheader("📊 Molecular Properties")
                             properties = extract_chembl_properties(compound_details)
@@ -499,9 +494,7 @@ def main():
                         with col1:
                             st.subheader("🧬 Molecular Structure")
                             image_url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg"
-
-                            st.write("Image URL:")
-                            st.write(image_url)
+                            with col1:
                         
                         with col2:
                             st.subheader("📊 Molecular Properties")
