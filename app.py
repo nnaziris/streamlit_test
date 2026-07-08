@@ -336,20 +336,6 @@ def main():
         
         return properties if properties else None
 
-    def get_chembl_image(chembl_id):
-        """Fetch molecule image from ChEMBL"""
-        try:
-            if not chembl_id:
-                return None
-            # The image SVG endpoint usually exists for molecule IDs
-            url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg"
-            response = requests.get(url, timeout=10)
-            if response.status_code == 200:
-                return response.content
-        except requests.exceptions.RequestException:
-            pass
-        return None
-
     def get_lipinski_compliance(descriptors):
         """Check Lipinski's Rule of 5 compliance"""
         if not descriptors:
@@ -443,11 +429,10 @@ def main():
                             st.subheader("🧬 Molecular Structure")
                             # Try to display molecule image
                             try:
-                                img_data = get_chembl_image(chembl_id)
-                                if img_data:
-                                    st.image(img_data, use_column_width=True)
-                                else:
-                                    st.info("Molecule image not available")
+                                st.image(
+                                    f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.png",
+                                    use_container_width=True
+                                )
                             except Exception as e:
                                 st.info(f"Could not load molecule image: {str(e)}")
                         
