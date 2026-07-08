@@ -293,7 +293,10 @@ def main():
             
             # Molecular Weight
             if "mw_freebase" in props and props["mw_freebase"] is not None:
-                properties["Molecular Weight"] = round(props["mw_freebase"], 2)
+                try:
+                    properties["Molecular Weight"] = round(float(props["mw_freebase"]), 2)
+                except (ValueError, TypeError):
+                    properties["Molecular Weight"] = "N/A"
             
             # LogP (Crippen) - stored as alogps
             if "alogps" in props:
