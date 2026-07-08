@@ -494,7 +494,7 @@ def main():
                         with col1:
                             st.subheader("🧬 Molecular Structure")
                             image_url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg"
-                            with col1:
+                            st.image(image_url)
                         
                         with col2:
                             st.subheader("📊 Molecular Properties")
