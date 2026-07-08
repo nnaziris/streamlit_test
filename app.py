@@ -325,14 +325,12 @@ def main():
             props.get("tpsa")
         )
 
-    if "molecule_chembl_id" in compound_data:
+        if "molecule_chembl_id" in compound_data:
         properties["image_url"] = (
             f"https://www.ebi.ac.uk/chembl/api/data/image/"
             f"{compound_data['molecule_chembl_id']}.svg"
         )
-
-    return properties if properties else None
-        
+              
         # Add image URL if available
         if "image_file" in compound_data:
             properties["image_url"] = f"https://www.ebi.ac.uk/chembl/api/data/image/{compound_data['molecule_chembl_id']}.svg"
