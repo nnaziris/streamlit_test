@@ -417,6 +417,9 @@ def main():
                     selected_compound = compounds[selected_idx]
                     chembl_id = selected_compound.get('molecule_chembl_id', 'N/A')
                     pref_name = selected_compound.get('pref_name', 'Unknown')
+
+                    st.write("ChEMBL ID:", chembl_id)
+                    st.json(selected_compound)
                     
                     with st.spinner("Fetching compound details..."):
                         compound_details = fetch_chembl_compound_details(chembl_id)
