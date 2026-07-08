@@ -433,7 +433,7 @@ def main():
                                 <style>
                                 img {
                                     background-color: white;
-                                    padding: 15px;
+                                    padding: 10px;
                                     border-radius: 10px;
                                 }
                                 </style>
@@ -515,7 +515,7 @@ def main():
                                 <style>
                                 img {
                                     background-color: white;
-                                    padding: 15px;
+                                    padding: 10px;
                                     border-radius: 10px;
                                 }
                                 </style>
