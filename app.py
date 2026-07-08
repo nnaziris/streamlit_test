@@ -297,39 +297,38 @@ def main():
 
         if "molecule_properties" in compound_data:
             props = compound_data["molecule_properties"]
-            
+           
+            properties["Molecular Weight"] = safe_float(
+                props.get("mw_freebase")
+            )
 
-        properties["Molecular Weight"] = safe_float(
-            props.get("mw_freebase")
-        )
+            properties["LogP (Crippen)"] = safe_float(
+                props.get("alogps")
+            )
 
-        properties["LogP (Crippen)"] = safe_float(
-            props.get("alogps")
-        )
+            properties["CX LogP"] = safe_float(
+                props.get("cx_logp")
+            )
 
-        properties["CX LogP"] = safe_float(
-            props.get("cx_logp")
-        )
+            properties["CX LogD7.4"] = safe_float(
+                props.get("cx_logd")
+            )
 
-        properties["CX LogD7.4"] = safe_float(
-            props.get("cx_logd")
-        )
+            if props.get("num_h_donors") is not None:
+                properties["HB Donors"] = props.get("num_h_donors")
 
-        if props.get("num_h_donors") is not None:
-            properties["HB Donors"] = props.get("num_h_donors")
+            if props.get("num_h_acceptors") is not None:
+                properties["HB Acceptors"] = props.get("num_h_acceptors")
 
-        if props.get("num_h_acceptors") is not None:
-            properties["HB Acceptors"] = props.get("num_h_acceptors")
-
-        properties["TPSA"] = safe_float(
-            props.get("tpsa")
-        )
+            properties["TPSA"] = safe_float(
+                props.get("tpsa")
+            )
 
         if "molecule_chembl_id" in compound_data:
-        properties["image_url"] = (
-            f"https://www.ebi.ac.uk/chembl/api/data/image/"
-            f"{compound_data['molecule_chembl_id']}.svg"
-        )
+            properties["image_url"] = (
+                f"https://www.ebi.ac.uk/chembl/api/data/image/"
+                f"{compound_data['molecule_chembl_id']}.svg"
+            )
               
         # Add image URL if available
         if "image_file" in compound_data:
