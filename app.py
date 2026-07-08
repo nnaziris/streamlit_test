@@ -430,14 +430,10 @@ def main():
                         
                         with col1:
                             st.subheader("🧬 Molecular Structure")
-                            # Try to display molecule image
-                            try:
-                                st.image(
-                                    f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.png",
-                                    use_container_width=True
-                                )
-                            except Exception as e:
-                                st.info(f"Could not load molecule image: {str(e)}")
+                            image_url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg"
+
+                            st.write("Image URL:")
+                            st.write(image_url)
                         
                         with col2:
                             st.subheader("📊 Molecular Properties")
@@ -502,14 +498,10 @@ def main():
                         
                         with col1:
                             st.subheader("🧬 Molecular Structure")
-                            try:
-                                img_data = get_chembl_image(chembl_id)
-                                if img_data:
-                                    st.image(img_data, use_column_width=True)
-                                else:
-                                    st.info("Molecule image not available")
-                            except Exception as e:
-                                st.info(f"Could not load molecule image: {str(e)}")
+                            image_url = f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg"
+
+                            st.write("Image URL:")
+                            st.write(image_url)
                         
                         with col2:
                             st.subheader("📊 Molecular Properties")
