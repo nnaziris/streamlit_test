@@ -443,7 +443,7 @@ def main():
                         
                             st.image(
                                 f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg",
-                                width=200
+                                width=500
                             )
                        
                         with col2:
@@ -525,7 +525,7 @@ def main():
                         
                             st.image(
                                 f"https://www.ebi.ac.uk/chembl/api/data/image/{chembl_id}.svg",
-                                width=200
+                                width=500
                             )
                         
                         with col2:
