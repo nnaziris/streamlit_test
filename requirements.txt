@@ -2,5 +2,4 @@ streamlit
 pyvis
 networkx
 requests
-Pillow
 rdkit
